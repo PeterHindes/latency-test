@@ -3,6 +3,7 @@ const http = require('http');
 const mime = require('mime');
 
 const started = Date.now();
+const skeleton = fs.readFileSync("skeleton.html").toString();
 const drop = fs.readFileSync("drop.js").toString();
 
 const html = fs.readFileSync("sitefiles/index.html").toString();
@@ -15,7 +16,7 @@ const requestListener = function (req, res) {
     res.setHeader('Content-Type', 'image/x-icon');
     fs.createReadStream("sitefiles/favicon.ico").pipe(res);
 
-  } else if (req.url == '/bundle') {
+  } else if (req.url == '/bundle' || req.url == '/') {
     res.setHeader('Content-Type', mime.getType(html))
     res.writeHead(200);
     res.end(
@@ -26,9 +27,30 @@ const requestListener = function (req, res) {
 
   } else if (req.url == '/dropb') {
     res.writeHead(200);
-    res.end(
-      "Wip"
-    );
+    if () { // Cookies show up to date
+      res.end(
+        skeleton
+          .replace("<!-- scriptflag -->", 
+            "<script>"+
+            "const loadFromLocal = true;"+
+            "</script>"+
+            "<script>"+drop+"</script>"
+          )
+      );
+    } else {
+      res.end(
+        skeleton
+          .replace("<!-- scriptflag -->", 
+            "<script>"+
+            "const loadFromLocal = false;"+
+            "const html = "+html+"; "+
+            "const js = "+js+";"+ // need to escape multiline
+            "const css = "+css+";"+
+            "</script>"+
+            "<script>"+drop+"</script>"
+          )
+      );
+    }
   } else if (req.url.indexOf("singles") > -1) {
     console.log("SINGLES");
 
