@@ -1,43 +1,58 @@
 const fs = require("fs");
 const http = require('http');
+const mime = require('mime');
+
+const started = Date.now();
+const drop = fs.readFileSync("drop.js").toString();
 
 const html = fs.readFileSync("sitefiles/index.html").toString();
 const js = fs.readFileSync("sitefiles/script.js").toString();
 const css = fs.readFileSync("sitefiles/style.css").toString();
-//const ico = fs.readFileSync("sitefiles/favicon.ico").toString();
 
 const requestListener = function (req, res) {
   console.log(req.url);
   if (req.url == '/favicon.ico') {
     res.setHeader('Content-Type', 'image/x-icon');
-
-    // Serve your favicon and finish response.
-    //
-    // You don't need to call `.end()` yourself because
-    // `pipe` will do it automatically.
     fs.createReadStream("sitefiles/favicon.ico").pipe(res);
+
   } else if (req.url == '/bundle') {
+    res.setHeader('Content-Type', mime.getType(html))
     res.writeHead(200);
     res.end(
-        html
-          .replace("<!-- scriptflag -->", "<script>"+js+"</script>")
-          .replace("<!-- styleflag -->", "<style>"+css+"</style>")
+      html
+        .replace("<!-- scriptflag -->", "<script>"+js+"</script>")
+        .replace("<!-- styleflag -->", "<style>"+css+"</style>")
+    );
+
+  } else if (req.url == '/dropb') {
+    res.writeHead(200);
+    res.end(
+      "Wip"
     );
   } else if (req.url.indexOf("singles") > -1) {
-    res.writeHead(200);
     console.log("SINGLES");
-    if (req.url.indexOf("css") > -1) {
+
+    if (req.url.indexOf("css") > -1) { // singles/any.css matches
       console.log("singcss");
+      res.setHeader('Content-Type', mime.getType(css))
+      res.writeHead(200);
       res.end(css);
+
     } else if (req.url.indexOf("js") > -1) {
       console.log("singjs");
+      res.setHeader('Content-Type', mime.getType(js))
+      res.writeHead(200);
       res.end(js);
+
     } else {
+      res.setHeader('Content-Type', mime.getType(html));
+      res.writeHead(200);
       res.end(
         html
           .replace("<!-- scriptflag -->", "<script src=\"/singles/any.js\"></script>")
           .replace("<!-- styleflag -->", "<link rel=\"stylesheet\" href=\"/singles/mystyle.css\">")
       );
+
     }
   }
 }
